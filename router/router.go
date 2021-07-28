@@ -54,4 +54,7 @@ func Route(app *gin.Engine) {
 	api.GET("/todo/:id", todoController.GetTodoById)
 	api.PUT("/todo/:id", todoController.UpdateTodo)
 	api.DELETE("/todo/:id", todoController.DeleteTodo)
+
+	postController := new(controller.PostController)
+	api.GET("/post/:id", postController.GetTodoById)
 }

@@ -16,7 +16,7 @@ type Todo struct {
 }
 
 // Tablename gorm
-func (t *Todo) TableName() string {
+func (Todo) TableName() string {
 	return "todos"
 }
 
