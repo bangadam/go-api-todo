@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/google/jsonapi"
@@ -17,11 +18,52 @@ type Post struct {
 	Comments []*Comment `jsonapi:"relation,comments,omitempty"`
 	CreatedAt time.Time `jsonapi:"attr,createdAt"`
 	UpdatedAt time.Time `jsonapi:"attr,updatedAt"`
-	DeletedAt time.Time `jsonapi:"attr,deletedAt"`
 }
 
 func (Post) TableName() string {
 	return "post"
+}
+
+func (p *Post) GetPostsPaginate(page string, perPage string) (post []*Post, err error) {
+
+	newpPage, err := strconv.Atoi(page)
+	newpPerPage, err := strconv.Atoi(perPage)	
+
+	db := DB().Preload("Comments").Limit(newpPerPage).Offset(newpPerPage * (newpPage - 1)).Find(&post)
+
+	if db.Error != nil {
+		return nil, db.Error
+	}
+
+	return post, nil
+}
+
+func (p *Post) StorePost() error {
+	db := DB().Create(p)
+	if db.Error != nil {
+		return db.Error
+	} else if db.RowsAffected == 0 {
+		return ErrKeyConflict
+	}
+	return nil
+}
+
+func (p *Post) UpdatePost(title string, description string, id string) error {
+	db := DB().Where("id = ?", id).First(&p)
+
+	if db.Error != nil {
+		return db.Error
+	}
+
+	p.Title = title
+	p.Body = description
+	db.Save(p)
+
+	if db.Error != nil {
+		return db.Error
+	}
+
+	return nil
 }
 
 func (p *Post) GetPostById(id string) error {
@@ -32,6 +74,17 @@ func (p *Post) GetPostById(id string) error {
 	}
 
 	return err
+}
+
+func (p *Post) DeletePost(id string) error {
+	db := DB().Where("id = ?", id).Delete(&p)
+
+	if db.Error != nil {
+		return db.Error
+	}
+
+	return nil
+	
 }
 
 
@@ -54,7 +107,6 @@ func (post Post) JSONAPIRelationshipLinks(relation string) *jsonapi.Links {
 // JSONAPIMeta implements the Metable interface for a blog
 func (post Post) JSONAPIMeta() *jsonapi.Meta {
 	return &jsonapi.Meta{
-		"includes": []string{"comments"},
 		"detail": "extra details regarding the post",
 	}
 }

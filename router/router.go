@@ -49,6 +49,10 @@ func Route(app *gin.Engine) {
 		api.GET("/version", indexController.GetVersion)
 	}
 
+	authController := new(controller.AuthController)
+	api.POST("/login", authMiddleware.LoginHandler)
+	api.POST("/signup", authController.DoSignup)
+
 	todoController := new(controller.TodoController)
 	api.POST("/todo", todoController.StoreTodo)
 	api.GET("/todo/:id", todoController.GetTodoById)
@@ -56,5 +60,9 @@ func Route(app *gin.Engine) {
 	api.DELETE("/todo/:id", todoController.DeleteTodo)
 
 	postController := new(controller.PostController)
+	api.GET("/post", postController.GetPostsPaginate)
+	api.POST("/post", postController.StorePost)
 	api.GET("/post/:id", postController.GetTodoById)
+	api.PUT("/post/:id", postController.UpdatePost)
+	api.DELETE("/post/:id", postController.DeletePost)
 }
